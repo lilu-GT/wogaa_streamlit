@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "WOGAA_micro_site"
+version = "0.1.0"
+description = ""
+authors = ["lilu-GT <lilu@dsaid.gov.sg>"]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.9.7 || >3.9.7,<4.0"
+pandas = "^1.4.1"
+gensim = "^4.1.2"
+scikit-learn = "^1.0.2"
+spacy = "^3.0.0"
+wordcloud = "^1.8.1"
+python-docx = "^0.8.11"
+nltk = "^3.7"
+pyfunctional = "^1.4.3"
+openpyxl = "^3.0.9"
+torch = "^1.11.0"
+boto3 = "^1.24.74"
+streamlit = "^1.12.2"
+# pyxlsb = "^1.0.9"
+XlsxWriter = "^3.0.3"
+
+[tool.poetry.dependencies.en_core_web_sm]
+url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
