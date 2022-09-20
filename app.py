@@ -122,34 +122,8 @@ def main():
             st.subheader('Results:')
             # For 3 different sizes:
             for cluster_size, cluster_num_ratio in zip(cluster_size_list, cluster_num_ratio_list):
-                # ----------------------- Clustering -----------------------#
-                # Round 1:
-                gsdmm = GSDMM(processed_tokens_key, cluster_label)
-                _, cluster_num_1st = gsdmm.cluster(
-                    df, num_clusters=num_clusters, n_iters=n_iters_1st, verbose=False)
-                print(
-                    f"\n  First iteration: {cluster_num_1st} clusters predicted")
-                cluster_num = round(cluster_num_1st/cluster_num_ratio)
-                print(
-                    f"\n  Downscale {cluster_num_ratio} folds to have, {cluster_num} clusters for second iteration\n")
-
-                # Round 2:
-                df_clustered, cluster_num = gsdmm.cluster(
-                    df, num_clusters=cluster_num, n_iters=n_iters_2nd, verbose=False)
-                df_clustered = df_clustered.sort_values(
-                    [cluster_label, "max_score"], ascending=[True, False])
-                print(f"\n  {cluster_num} clusters predicted")
-                print(
-                    f"  Clustered: {df_clustered.shape[0]}, Non-clustered: {df_empty_responses.shape[0]}")
-
-                # ----------------------- Show and Download the results -----------------------#
-
-                # Excel File
-                columns_to_keep = columns_in_file + [cluster_label]
-                df_clustered_output = df_clustered[columns_to_keep]
-                df_empty_responses = df_empty_responses[columns_to_keep[:-1]]
-                # st.text("Clustered feedback:")
-                # st.write(df_clustered_output)
+                df_clustered_output, df_empty_responses = perform_clustering(
+                    processed_tokens_key, cluster_label, df, num_clusters, n_iters_1st, n_iters_2nd, cluster_num_ratio, columns_in_file, df_empty_responses)
 
                 xlsx_file = to_excel(df_clustered_output, df_empty_responses)
                 st.download_button(label=f'📥 Clustered result ({cluster_size} number of clusters)',
@@ -165,6 +139,7 @@ def get_pos_neg_files(df_high, df_low):
     return df_high, df_low
 
 
+@st.experimental_memo
 def preprocess_df(df, processed_tokens_key, text_field, n_letters_stopwords=1, add_on_stopwords=[], allowed_postags=["NOUN", "ADJ", "VERB"], min_count_bigram=5, threshold_bigram=10, res_folder='../Result', dataset='', sw_top_ratio=0.02, pos_neg=''):
     # keep rows that are empty
     empty_responses_df = df[df[text_field].isnull()]
@@ -211,10 +186,49 @@ def preprocess_df(df, processed_tokens_key, text_field, n_letters_stopwords=1, a
 
     return df, empty_responses_df
 
-
+#
 # delete the folders
+#
+
+
+############### Clustering  ###############
+
+@st.experimental_memo
+def perform_clustering(processed_tokens_key, cluster_label, df, num_clusters, n_iters_1st, n_iters_2nd, cluster_num_ratio, columns_in_file, df_empty_responses):
+    # ----------------------- Clustering -----------------------#
+    # Round 1:
+    gsdmm = GSDMM(processed_tokens_key, cluster_label)
+    _, cluster_num_1st = gsdmm.cluster(
+        df, num_clusters=num_clusters, n_iters=n_iters_1st, verbose=False)
+    print(
+        f"\n  First iteration: {cluster_num_1st} clusters predicted")
+    cluster_num = round(cluster_num_1st/cluster_num_ratio)
+    print(
+        f"\n  Downscale {cluster_num_ratio} folds to have, {cluster_num} clusters for second iteration\n")
+
+    # Round 2:
+    df_clustered, cluster_num = gsdmm.cluster(
+        df, num_clusters=cluster_num, n_iters=n_iters_2nd, verbose=False)
+    df_clustered = df_clustered.sort_values(
+        [cluster_label, "max_score"], ascending=[True, False])
+    print(f"\n  {cluster_num} clusters predicted")
+    print(
+        f"  Clustered: {df_clustered.shape[0]}, Non-clustered: {df_empty_responses.shape[0]}")
+
+    # ----------------------- Show and Download the results -----------------------#
+
+    # Excel File
+    columns_to_keep = columns_in_file + [cluster_label]
+    df_clustered_output = df_clustered[columns_to_keep]
+    df_empty_responses = df_empty_responses[columns_to_keep[:-1]]
+    # st.text("Clustered feedback:")
+    # st.write(df_clustered_output)
+
+    return df_clustered_output, df_empty_responses
 
 ############### functions in preprocess_df ###############
+
+
 def pos_tagging(data):
     nlp = spacy.load('en_core_web_sm', disable=['ner', 'parser'])
     data_doc_sent = []
